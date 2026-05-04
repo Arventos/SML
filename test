@@ -1,0 +1,27 @@
+from google.cloud import videointelligence
+
+video_client = videointelligence.VideoIntelligenceServiceClient()
+features = [videointelligence.Feature.SPEECH_TRANSCRIPTION]
+
+# Change "en-US" to "pl-PL" if the lecture is in Polish
+config = videointelligence.SpeechTranscriptionConfig(
+    language_code="en-US", 
+    enable_automatic_punctuation=True
+)
+video_context = videointelligence.VideoContext(speech_transcription_config=config)
+
+input_uri = "gs://videostoragebucket22/Operating Systems I - Lecture 1-20251001_081758-Nagrywanie spotkania 1.mp4"
+
+print(f"Processing video: {input_uri}")
+operation = video_client.annotate_video(
+    request={
+        "features": features,
+        "input_uri": input_uri,
+        "video_context": video_context,
+    }
+)
+
+result = operation.result(timeout=900)
+for speech_transcription in result.annotation_results[0].speech_transcriptions:
+    for alternative in speech_transcription.alternatives:
+        print(f"Transcript: {alternative.transcript}\n")
